@@ -90,9 +90,9 @@ function sR_evo(algo::Algo, I0, β, σμ, σw, λ, MS; θs = 16, α = 5, sigma_i
     lma = lift(LMA(σμ, I0), θs; args...)
     
     if algo == LHE
-        res = project(lhe(F0, α, β, σw, λ, lma; M = MS, args...), normalized = false)
+        res = project(lhe(F0, α, β, σw, λ, lma; M = MS, args...), normalized = true)
     elseif algo == WC
-        res = project(wc(F0, α, β, σw, λ, lma; M = MS, args...), normalized = false)
+        res = project(wc(F0, α, β, σw, λ, lma; M = MS, args...), normalized = true)
     end
 
     if verbose 
