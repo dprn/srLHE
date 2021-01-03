@@ -1,0 +1,13 @@
+name = "SrLHE"
+uuid = "f3db324a-6d54-42d3-b67e-5fe09d25b703"
+authors = ["dprn <dario.prandi@centralesupelec.fr>"]
+version = "0.1.0"
+
+[deps]
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+ImageFiltering = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
+Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
