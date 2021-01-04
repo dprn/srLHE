@@ -14,8 +14,8 @@ K = 16 # orientations
 β = K/sqrt(2*N^2); # needed for the unit coherency in spatial and orientation dimensions
 M = 1.
 
-sR_lhe(img, λ, σμ, α, Δt, Δτ, τ) = SrLHE.sR_lhe(img, β, σμ, τ, λ, M, θs = K, α = α, Δt = Δt, Δτ = Δτ)
-sR_wc(img, λ, σμ, α, Δt, Δτ, τ) = SrLHE.sR_wc(img, β, σμ, τ, λ, M, θs = K, α = α, Δt = Δt, Δτ = Δτ)
+sR_lhe(img, λ, σμ, α, Δt, Δτ, τ; args...) = SrLHE.sR_lhe(img, β, σμ, τ, λ, M, θs = K, α = α, Δt = Δt, Δτ = Δτ; args...)
+sR_wc(img, λ, σμ, α, Δt, Δτ, τ; args...) = SrLHE.sR_wc(img, β, σμ, τ, λ, M, θs = K, α = α, Δt = Δt, Δτ = Δτ; args...)
 
 ##################
 # Gratings tests #
