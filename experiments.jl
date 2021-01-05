@@ -25,8 +25,8 @@ mkpath("results")
 
 img = Float64.(load("test_images/gratings.png"))
 
-save("gratings_wc.png", sR_wc(img, 0.01, 6.5, 20, 0.1, 0.01, 5.))
-save("gratings_lhe.png", sR_lhe(img, 2., 1., 8, 0.15, 0.01, 5.))
+save("results/gratings_wc.png", sR_wc(img, 0.01, 6.5, 20, 0.1, 0.01, 5.))
+save("results/gratings_lhe.png", sR_lhe(img, 2., 1., 8, 0.15, 0.01, 5.))
 
 # Dependence w.r.t. τ
 
