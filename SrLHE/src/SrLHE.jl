@@ -26,7 +26,9 @@ iterations(R::Result) = R.iter
 tolerance(R::Result) = R.tol
 project(R::Result{3}; etc...) = Result{2}(project(R.res; etc...), iterations(R), tolerance(R))
 Base.show(R::Result{2}) = Gray.(R[:,:])
+Base.ndims(R::Result{n}) where n = n
 
+normalize(R::Result) = Result{ndims(R)}(normalize(R.res), R.iter, R.tol)
 normalize(x::Array) = typeof(x)(x - ones(size(x))*minimum(x))/(maximum(x)-minimum(x))
 
 function project(F::Lift; normalized::Bool = true, args...)
@@ -85,15 +87,17 @@ end
 
 sR_lhe(I0, β, σμ, σw, λ, MS; args...) = sR_evo(LHE, I0, β, σμ, σw, λ, MS; args...)
 sR_wc(I0, β, σμ, σw, λ, MS; args...) = sR_evo(WC, I0, β, σμ, σw, λ, MS; args...)
-function sR_evo(algo::Algo, I0, β, σμ, σw, λ, MS; θs = 16, α = 5, sigma_interp_order = 8, verbose = false, args...)
+function sR_evo(algo::Algo, I0, β, σμ, σw, λ, MS; θs = 16, α = 5, sigma_interp_order = 8, verbose = false, normalized = true, args...)
     F0 = lift(I0, θs, m = size(I0, 1))
     lma = lift(LMA(σμ, I0), θs; args...)
     
     if algo == LHE
-        res = project(lhe(F0, α, β, σw, λ, lma; M = MS, args...), normalized = true)
+        res = project(lhe(F0, α, β, σw, λ, lma; M = MS, args...), normalized = false)
     elseif algo == WC
-        res = project(wc(F0, α, β, σw, λ, lma; M = MS, args...), normalized = true)
+        res = project(wc(F0, α, β, σw, λ, lma; M = MS, args...), normalized = false)
     end
+
+    normalized ? (res = normalize(res)) : nothing
 
     if verbose 
         res 
