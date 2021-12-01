@@ -82,7 +82,7 @@ function lhe(I0, α, β, σw, λ, lma; sigma_interp_order = 8, conv_type::ConvTy
     elseif conv_type == GroupConv
         # we need odd number of pixels
         init = padarray(I0, Fill(0,(1,0,0),(0,1,0))) |> parent |> unfold
-        lma2 = padarray(lma2, Fill(0,(1,0,0),(0,1,0))) |> parent |> unfold
+        lma2 = padarray(lma, Fill(0,(1,0,0),(0,1,0))) |> parent |> unfold
         G = GridSE2(size(init, 1), size(init, 3))
         kern = sr_heat(G, t = σw/100)
         group_conv(f, β, σw; args...) = corr(f, kern)
