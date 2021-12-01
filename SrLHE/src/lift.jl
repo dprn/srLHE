@@ -64,3 +64,16 @@ function lift(img::Array{T,2}, θs::Int = 30 ; m::Int = 100, args...) where T<:R
     return lift
 end
 
+"""
+We pass from a representation in R^2×P^1 to a representation in R^2×S^1. 
+That is, from angles in [0, π] (obtained via the lift in `SrLHE`) to angles 
+in [-π,π] (used in the above filtering) 
+"""
+function unfold(f)
+    @assert isodd(size(f,3))
+    
+    x = zeros(eltype(f), size(f, 1), size(f, 2), 2*size(f, 3)-1)
+    m = size(f,3)
+    x[:,:,m:end] = f
+    x
+end

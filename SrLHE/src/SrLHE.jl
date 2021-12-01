@@ -1,12 +1,15 @@
 module SrLHE
 
-export sR_lhe, sR_wc, Result
+export sR_lhe, sR_wc, SE2_lhe, SE2_wc, Result
 
 using Images, ImageFiltering, OffsetArrays, FFTW
 using ProgressMeter
 
 include("../../PolynomialApprox/src/PolynomialApprox.jl")
 using .PolynomialApprox
+
+include("../../SE2Conv/src/SE2Conv.jl")
+using .SE2Conv
 
 include("lift.jl")
 include("sr-heat.jl")
@@ -15,6 +18,7 @@ Lift{T} = Array{T,3}
 Kern{T,n} = OffsetArrays.OffsetArray{T, n, Array{T,n}}
 
 @enum Algo LHE WC
+@enum ConvType GroupConv HeatEq
 
 struct Result{n}
     res :: Array{Float64, n}
@@ -64,29 +68,47 @@ function gradient_descent(I0::Array, W, λ::Real, lma::Array;
     Result{ndims(I0)}(cur, final_iter, diff(prec, cur))
 end
 
-function R(I, β, τ; pol_coeffs = coeffs_sigma(5, 8), args...)
+function R(I, conv, β, τ; pol_coeffs = coeffs_sigma(5, 8), args...)
     n = length(pol_coeffs)
     a = [sum([(-1.)^(j-i+1)*pol_coeffs[j+1]*binomial(j,i)*I.^(j-i) for j in i:(n-1)]) for i in 0:(n-1)]
-    sum([ a[i] .* sR_heat(I.^(i-1), β, τ; args...) for i in 1:n])
+    sum([ a[i] .* conv(I.^(i-1), β, τ; args...) for i in 1:n])
 end
 
-
-function lhe(I0, α, β, σw, λ, lma; sigma_interp_order = 8, args...)
+function lhe(I0, α, β, σw, λ, lma; sigma_interp_order = 8, conv_type::ConvType = HeatEq, args...)
     σ(x) = min(max(α*x, -1), 1) # LHE sigma function
     c = coeffs_approx(σ, sigma_interp_order)
-    W(I) = R(I, β, σw, pol_coeffs = c)
-    gradient_descent(I0, W, λ, lma; args...)
+    if conv_type == HeatEq
+        res = gradient_descent(I0, I -> R(I, sR_heat, β, σw, pol_coeffs = c), λ, lma; args...)
+    elseif conv_type == GroupConv
+        # we need odd number of pixels
+        init = padarray(I0, Fill(0,(1,0,0),(0,1,0))) |> parent |> unfold
+        G = GridSE2(size(init, 1), size(init, 3))
+        kern = sr_heat(G, t = σw/100)
+        group_conv(f, β, σw; args...) = corr(f, kern)
+        res = gradient_descent(init, I -> R(I, group_conv, β, σw, pol_coeffs = c), λ, lma; args...)
+    end
+    res
 end
 
-function wc(I0, α, β, σw, λ, lma; args...)
+function wc(I0, α, β, σw, λ, lma; conv_type::ConvType = HeatEq, args...)
     σ(x) = -min(max(α*(x-1/2), -1), 1) # WC sigma function
-    W(I) = sR_heat(σ.(I), β, σw; args...)
-    gradient_descent(I0, W, λ, lma; args...)
+    if conv_type == HeatEq
+        res = gradient_descent(I0, I -> sR_heat(σ.(I), β, σw; args...), λ, lma; args...)
+    elseif conv_type == GroupConv
+        # we need odd number of pixels
+        init = padarray(I0, Fill(0,(1,0,0),(0,1,0))) |> parent |> unfold
+        G = GridSE2(size(init, 1), size(init, 3))
+        kern = sr_heat(G, t = σw/100)
+        res = gradient_descent(init, I -> corr(σ.(I), kern), λ, lma; args...)
+    end
+    res
 end
 
-
-sR_lhe(I0, β, σμ, σw, λ, MS; args...) = sR_evo(LHE, I0, β, σμ, σw, λ, MS; args...)
+sR_lhe(I0, β, σμ, σw, λ, MS; args...) = sR_evo(LHE, I0, β, σμ, σw, λ, MS;  args...)
 sR_wc(I0, β, σμ, σw, λ, MS; args...) = sR_evo(WC, I0, β, σμ, σw, λ, MS; args...)
+
+SE2_lhe(I0, β, σμ, σw, λ, MS; args...) = sR_evo(LHE, I0, β, σμ, σw, λ, MS; conv_type = GroupConv, args...)
+SE2_wc(I0, β, σμ, σw, λ, MS; args...) = sR_evo(WC, I0, β, σμ, σw, λ, MS; conv_type = GroupConv, args...)
 function sR_evo(algo::Algo, I0, β, σμ, σw, λ, MS; θs = 16, α = 5, sigma_interp_order = 8, verbose = false, normalized = true, args...)
     F0 = lift(I0, θs, m = size(I0, 1))
     lma = lift(LMA(σμ, I0), θs; args...)
