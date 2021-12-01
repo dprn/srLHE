@@ -23,7 +23,7 @@ function proj(v::Polynomial,u::Polynomial)
     (dot(u,v)/dot(u,u))*u
 end
 
-function gram_schmidt(b::Array{Polynomial{T}}) where T<:Number
+function gram_schmidt(b::Array{Polynomial{T, :x}}) where T<:Number
     ob = similar(b)
     for i in 1:length(b)
         v = b[i]
@@ -40,7 +40,7 @@ orthonormal_basis(n) = canonical_basis(n) |> gram_schmidt
 dot(f, g) = first( quadgk( x-> f(x)g(x), a, b) )
 dot(f, p::Polynomial) = dot(f, x->p(x))
 
-function approx(f, ob::Array{Polynomial{T}}) where T<:Number
+function approx(f, ob::Array{Polynomial{T, :x}}) where T<:Number
     cmp = [ dot(f, ob[i]) for i in 1:length(ob) ]
     sum([cmp[i]*(ob[i]) for i in 1:length(ob)])
 end
