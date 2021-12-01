@@ -1,0 +1,8 @@
+name = "SE2Conv"
+uuid = "0e2541c8-ce5d-45eb-b594-5f1394b31226"
+authors = ["dprn <dario.prandi@centralesupelec.fr>"]
+version = "0.1.0"
+
+[deps]
+ImageFiltering = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
+OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
