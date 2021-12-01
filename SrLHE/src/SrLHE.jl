@@ -78,14 +78,15 @@ function lhe(I0, α, β, σw, λ, lma; sigma_interp_order = 8, conv_type::ConvTy
     σ(x) = min(max(α*x, -1), 1) # LHE sigma function
     c = coeffs_approx(σ, sigma_interp_order)
     if conv_type == HeatEq
-        res = gradient_descent(I0, I -> R(I, sR_heat, β, σw, pol_coeffs = c), λ, lma; args...)
+        res = gradient_descent(I0, I -> R(I, sR_heat, β, σw, pol_coeffs = c), λ, lma2; args...)
     elseif conv_type == GroupConv
         # we need odd number of pixels
         init = padarray(I0, Fill(0,(1,0,0),(0,1,0))) |> parent |> unfold
+        lma2 = padarray(lma2, Fill(0,(1,0,0),(0,1,0))) |> parent |> unfold
         G = GridSE2(size(init, 1), size(init, 3))
         kern = sr_heat(G, t = σw/100)
         group_conv(f, β, σw; args...) = corr(f, kern)
-        res = gradient_descent(init, I -> R(I, group_conv, β, σw, pol_coeffs = c), λ, lma; args...)
+        res = gradient_descent(init, I -> R(I, group_conv, β, σw, pol_coeffs = c), λ, lma2; args...)
     end
     res
 end
@@ -97,9 +98,10 @@ function wc(I0, α, β, σw, λ, lma; conv_type::ConvType = HeatEq, args...)
     elseif conv_type == GroupConv
         # we need odd number of pixels
         init = padarray(I0, Fill(0,(1,0,0),(0,1,0))) |> parent |> unfold
+        lma2 = padarray(lma, Fill(0,(1,0,0),(0,1,0))) |> parent |> unfold
         G = GridSE2(size(init, 1), size(init, 3))
         kern = sr_heat(G, t = σw/100)
-        res = gradient_descent(init, I -> corr(σ.(I), kern), λ, lma; args...)
+        res = gradient_descent(init, I -> corr(σ.(I), kern), λ, lma2; args...)
     end
     res
 end
